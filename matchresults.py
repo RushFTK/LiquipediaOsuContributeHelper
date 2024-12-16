@@ -258,7 +258,7 @@ if __name__ == '__main__':
             redScore , blueScore = getScore(game,modMultipliers,accuracyScore=accuracyWin)
             # exclude broken match
             if (redScore is None or blueScore is None):
-                print(f'broken match detected in match : {roomName}')
+                print(f'broken game detected in match : {roomName} , \n might abort or disconnection happening , please do manually recheck')
             else:
                 if settings['swap_teams']:
                     blueScore , redScore = redScore, blueScore
