@@ -6,8 +6,8 @@ default_max_participates_in_list = 9
 
 def read_staffs():
     staffs = {}
-    wb = load_workbook(filename='sheets/staff.xlsx', read_only=True)
-    ws = wb.active
+    wb = load_workbook(filename='sheets/staff.xlsx')
+    ws = wb['Data']
     m_row = ws.max_row
     max_participates_in_list = ws['J3']
     if max_participates_in_list is None:

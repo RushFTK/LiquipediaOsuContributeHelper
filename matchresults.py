@@ -1,4 +1,5 @@
 import re
+import warnings
 
 import requests
 from ossapi import Mod
@@ -8,33 +9,16 @@ from ossapi import TeamType
 from openpyxl import load_workbook
 import commons
 
-client_id = commons.client_id
-client_secret = commons.client_secret
 api = commons.generate_osu_api()
 
-def getMatch_native(mpID):
-    url = "https://osu.ppy.sh/oauth/token"
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-    }
-    body = {
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "grant_type": 'client_credentials',
-        "scope": 'public'
-    }
-    response = requests.post(url, headers=headers, data=body)
-    access_token = response.json()['access_token']
-
-    url = f"https://osu.ppy.sh/api/v2/matches/{mpID}"
-    headers = {
-        'Authorization': 'Bearer ' + access_token,
-        "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-    }
-    response = requests.get(url, headers=headers)
-    return response.json()
+def exact_roomid(mplink_str) -> int | None:
+    mplink = None
+    split_links = mplink_str.split('/')
+    for i in range(1, len(split_links) + 1):
+        if split_links[-i].isdigit():
+            mplink = int(split_links[-i])
+            break
+    return mplink
 
 def readDatas():
     mappools = []
@@ -42,8 +26,10 @@ def readDatas():
     players = []
     mplinks = []
     settings = {}
-    wb = load_workbook(filename='sheets/match_result.xlsm', read_only=True)
-    ws = wb.active
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        wb = load_workbook(filename='sheets/match_result.xlsm')
+    ws = wb['Data']
     m_row = ws.max_row
     if m_row == None:
         # we will defined an default max mappools size if we couldn't
@@ -95,10 +81,19 @@ def readDatas():
                 players.append(playerUID)
         if not finshedRead['mplink']:
             readMark += 1
-            mplink = ws.cell(row=i, column=columnIndex['mplink_columnIndex']).value
-            if mplink is None:
+            mplink_cell = ws.cell(row=i, column=columnIndex['mplink_columnIndex'])
+            mplink_hyperlink = mplink_cell.hyperlink
+            mplink_text = mplink_cell.value
+            if mplink_text is None:
                 finshedRead['mplink'] = True
             else:
+                mplink = mplink_text
+                if isinstance(mplink_text,str):
+                    mplink = exact_roomid(mplink_text)
+                if mplink is None and not (mplink_hyperlink is None):
+                    mplink = exact_roomid(mplink_hyperlink.target)
+                    if mplink is None:
+                        print('unable to resolve mplink:'+mplink_text)
                 mplinks.append(mplink)
         # stop reading unused information
         if (readMark == 0):
@@ -265,7 +260,7 @@ if __name__ == '__main__':
             redScore , blueScore = getScore(game,modMultipliers,accuracyScore=accuracyWin)
             # exclude broken match
             if (redScore is None or blueScore is None):
-                print(f'broken match detected in match : {roomName}')
+                print(f'broken game detected in match : {roomName} , \nmight abort or disconnection happening , please do manually recheck')
             else:
                 if settings['swap_teams']:
                     blueScore , redScore = redScore, blueScore
