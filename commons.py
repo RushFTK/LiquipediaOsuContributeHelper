@@ -1,20 +1,19 @@
-import os
+import json
+
+from oauthlib.oauth2 import InvalidClientIdError
 from ossapi import Ossapi
-from dotenv import load_dotenv
-
-client_id = None
-client_secret = None
-
 
 def generate_osu_api():
     try:
-        load_dotenv()
-        client_id = os.getenv("client_id")
-        client_secret = os.getenv("client_secret")
+        with open("secret.json") as f:
+            data = json.load(f)
+            client_id = data["osu_apikeys"]["client_id"]
+            client_secret = data["osu_apikeys"]["client_secret"]
         api_obj = Ossapi(client_id, client_secret)
-    except AttributeError:
-        print('please fill client_id / secret in utils/common.py before using\n'
+    except InvalidClientIdError as e:
+        print('please fill client_id / secret in /secret.json before using\n'
             + 'You can find on osu!web settings (https://osu.ppy.sh/home/account/edit)')
+        print(e)
         api_obj = None
     return api_obj
 
