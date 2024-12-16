@@ -8,33 +8,7 @@ from ossapi import TeamType
 from openpyxl import load_workbook
 import commons
 
-client_id = commons.client_id
-client_secret = commons.client_secret
 api = commons.generate_osu_api()
-
-def getMatch_native(mpID):
-    url = "https://osu.ppy.sh/oauth/token"
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-    }
-    body = {
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "grant_type": 'client_credentials',
-        "scope": 'public'
-    }
-    response = requests.post(url, headers=headers, data=body)
-    access_token = response.json()['access_token']
-
-    url = f"https://osu.ppy.sh/api/v2/matches/{mpID}"
-    headers = {
-        'Authorization': 'Bearer ' + access_token,
-        "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-    }
-    response = requests.get(url, headers=headers)
-    return response.json()
 
 def readDatas():
     mappools = []
@@ -99,6 +73,14 @@ def readDatas():
             if mplink is None:
                 finshedRead['mplink'] = True
             else:
+                if isinstance(mplink,str):
+                    split_links = mplink.split('/')
+                    for i in range (1, len(split_links)+1):
+                        if split_links[-i].isdigit():
+                            mplink = int(split_links[-i])
+                            break
+                        if i == len(split_links):
+                            print('unable to resolve mplink:'+mplink)
                 mplinks.append(mplink)
         # stop reading unused information
         if (readMark == 0):
