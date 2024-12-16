@@ -1,11 +1,21 @@
+import json
+
+from oauthlib.oauth2 import InvalidClientIdError
 from ossapi import Ossapi
 
-client_id = None
-client_secret = None
-
-
 def generate_osu_api():
-    return Ossapi(client_id, client_secret)
+    try:
+        with open("secret.json") as f:
+            data = json.load(f)
+            client_id = data["osu_apikeys"]["client_id"]
+            client_secret = data["osu_apikeys"]["client_secret"]
+        api_obj = Ossapi(client_id, client_secret)
+    except InvalidClientIdError as e:
+        print('please fill client_id / secret in /secret.json before using\n'
+            + 'You can find on osu!web settings (https://osu.ppy.sh/home/account/edit)')
+        print(e)
+        api_obj = None
+    return api_obj
 
 def clean_clan_tags(player_name: str):
     tags = ['[GB]', '[Crz]', '[Paw]', '[LS]', '[Mom]', 'ERA ', '[RS]', '[KN]', '[RUE]',
