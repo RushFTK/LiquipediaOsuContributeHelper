@@ -1,4 +1,5 @@
 import re
+import warnings
 
 import requests
 from ossapi import Mod
@@ -10,14 +11,25 @@ import commons
 
 api = commons.generate_osu_api()
 
+def exact_roomid(mplink_str) -> int | None:
+    mplink = None
+    split_links = mplink_str.split('/')
+    for i in range(1, len(split_links) + 1):
+        if split_links[-i].isdigit():
+            mplink = int(split_links[-i])
+            break
+    return mplink
+
 def readDatas():
     mappools = []
     modMultipliers = []
     players = []
     mplinks = []
     settings = {}
-    wb = load_workbook(filename='sheets/match_result.xlsm', read_only=True)
-    ws = wb.active
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        wb = load_workbook(filename='sheets/match_result.xlsm')
+    ws = wb['Data']
     m_row = ws.max_row
     if m_row == None:
         # we will defined an default max mappools size if we couldn't
@@ -69,18 +81,17 @@ def readDatas():
                 players.append(playerUID)
         if not finshedRead['mplink']:
             readMark += 1
-            mplink = ws.cell(row=i, column=columnIndex['mplink_columnIndex']).value
-            if mplink is None:
+            mplink_cell = ws.cell(row=i, column=columnIndex['mplink_columnIndex'])
+            mplink_hyperlink = mplink_cell.hyperlink
+            mplink_text = mplink_cell.value
+            if mplink_text is None:
                 finshedRead['mplink'] = True
             else:
-                if isinstance(mplink,str):
-                    split_links = mplink.split('/')
-                    for i in range (1, len(split_links)+1):
-                        if split_links[-i].isdigit():
-                            mplink = int(split_links[-i])
-                            break
-                        if i == len(split_links):
-                            print('unable to resolve mplink:'+mplink)
+                mplink = exact_roomid(mplink_text)
+                if mplink is None and not (mplink_hyperlink is None):
+                    mplink = exact_roomid(mplink_hyperlink.target)
+                    if mplink is None:
+                        print('unable to resolve mplink:'+mplink_text)
                 mplinks.append(mplink)
         # stop reading unused information
         if (readMark == 0):
