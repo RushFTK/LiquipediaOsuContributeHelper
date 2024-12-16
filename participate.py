@@ -22,6 +22,8 @@ def read_participates():
         participate = {}
         if not is_solo_participate:
             participate['name'] = ws.cell(row=i, column=1).value
+            if isinstance(participate['name'],int):
+                participate['name'] = str(participate['name'])
         participate['players'] = ws.cell(row=i, column=2).value
         if participate['players'] is None:
             break
