@@ -76,7 +76,12 @@ def get_beatmapInfo(betmapid):
         for cleantag in cleantags:
             beatmap_version = beatmap_version.replace(cleantag, '')
         url = beatmap.url
-        info = f'<nowiki>{beatmapset.artist} - {beatmapset.title} ({beatmapset.creator}) [{beatmap_version}] </nowiki>'
+        mapper_string = ''
+        for index in range(0, len(beatmap.owners)):
+            mapper_string += beatmap.owners[index].username
+            if index != len(beatmap.owners) - 1:
+                mapper_string += ", "
+        info = f'<nowiki>{beatmapset.artist} - {beatmapset.title} ({mapper_string}) [{beatmap_version}] </nowiki>'
     except ValueError as e:
         print(e)
         url=''
