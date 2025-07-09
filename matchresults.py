@@ -130,7 +130,7 @@ def getPlayCount(game):
         countBlue = 0
         for score in game.scores:
             # exclude in-game referee
-            if score.score > 0:
+            if score.total_score > 0:
                 if score.match.team == 'red':
                     countRed += 1
                 if score.match.team == 'blue':
@@ -164,14 +164,14 @@ def getScore(game,modMultipliers,determinedByID = False,accuracyScore = False):
             # common way : red player = slot 0; blue player = slot 1
             if determinedByID:
                 if score.user_id == game.red_player_userid:
-                    redScore = score.score if not accuracyScore else (score.accuracy * 100)
+                    redScore = score.total_score if not accuracyScore else (score.accuracy * 100)
                 if score.user_id == game.blue_player_userid:
-                    blueScore = score.score if not accuracyScore else (score.accuracy * 100)
+                    blueScore = score.total_score if not accuracyScore else (score.accuracy * 100)
             else:
                 if score.match.slot == 0:
-                    redScore = score.score if not accuracyScore else (score.accuracy * 100)
+                    redScore = score.total_score if not accuracyScore else (score.accuracy * 100)
                 if score.match.slot == 1:
-                    blueScore = score.score if not accuracyScore else (score.accuracy * 100)
+                    blueScore = score.total_score if not accuracyScore else (score.accuracy * 100)
     # for teamVS tournaments (include 1v1 teams)
     if (game.team_type == TeamType.TEAM_VS) or (game.team_type == TeamType.TAG_TEAM_VS):
         redScore = 0
@@ -179,7 +179,7 @@ def getScore(game,modMultipliers,determinedByID = False,accuracyScore = False):
         redPlayers = 0
         bluePlayers = 0
         for score in game.scores:
-            finalScore = score.score if not accuracyScore else score.accuracy
+            finalScore = score.total_score if not accuracyScore else score.accuracy
             for modMultiplier in modMultipliers:
                 if Mod(modMultiplier['mod']) in score.mods:
                     finalScore = finalScore * modMultiplier['multiplier']
